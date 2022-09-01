@@ -72,11 +72,11 @@ class FormView extends Component {
         >
           <label>
             Question
-            <input type='text' name='question' onChange={this.handleChange} />
+            <input type='text' name='question' onChange={this.handleChange} required/>
           </label>
           <label>
             Answer
-            <input type='text' name='answer' onChange={this.handleChange} />
+            <input type='text' name='answer' onChange={this.handleChange} required/>
           </label>
           <label>
             Difficulty
