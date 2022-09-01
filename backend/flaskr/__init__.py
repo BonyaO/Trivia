@@ -53,9 +53,13 @@ def create_app(test_config=None):
 
         questions = Question.query.order_by(Question.id).all()
         category = Category.query.filter_by(id=questions[0].category).one_or_none()
+
+        current_questions = paginate_questions(request,questions)
+        if len(current_questions)==0:
+            abort(404)
         return jsonify({
             'success':True,
-            'questions':paginate_questions(request,questions),
+            'questions':current_questions,
             'total_questions': len(questions),
             'currentCategory': category.type,
             'categories': {category.id: "{}".format(category.type) for category in Category.query.all()}
@@ -90,19 +94,21 @@ def create_app(test_config=None):
             try:
                 new_question = Question(question=question, answer=answer, category=category, difficulty=difficulty)
                 new_question.insert()
-                print(new_question)
                 return jsonify({
                     'success': True,
                     'created': new_question.id,
                 })
             
             except:
-                abort(422)
+                abort(500)
         else:
             search_term = request.get_json()['searchTerm']
             try: 
                 questions = Question.query.filter(Question.question.ilike("%" + search_term + "%")).all()
                 category = Category.query.filter_by(id=questions[0].category).one_or_none()
+
+                if len(questions) == 0:
+                    abort(404)
                 
                 return jsonify({
                     'success': True,
@@ -113,7 +119,7 @@ def create_app(test_config=None):
                 })
 
             except: 
-                abort(400)
+                abort(404)
      
     @app.route('/categories/<int:category_id>/questions')
     def get_questions_for_id(category_id):
@@ -184,6 +190,14 @@ def create_app(test_config=None):
             "error":404,
             "message": "Not Found"
         }), 404
+
+    @app.errorhandler(500)
+    def handle_not_found(error):
+        return jsonify({
+            "success":False,
+            "error":500,
+            "message": "Server Error"
+        }), 500
 
     return app
 
